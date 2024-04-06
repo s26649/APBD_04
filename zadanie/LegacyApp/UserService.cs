@@ -10,20 +10,25 @@ namespace LegacyApp
             
             var clientRepository = new ClientRepository();
             var client = clientRepository.GetById(clientId);
-            
-            var user = new User
-            {
-                FirstName = firstName,
-                LastName = lastName,
-                EmailAddress = email,
-                DateOfBirth = dateOfBirth,
-                Client = client
-            };
+            var user = CreateUser(firstName, lastName, email, dateOfBirth, client);
 
             if (!SetCreditLimitAndCheck(user, client)) return false;
 
             UserDataAccess.AddUser(user);
             return true;
+        }
+        
+        // oddzielenie tworzenia usera do osobnej metody, poprawka czytelności (Single Responsibility Principle)
+        private User CreateUser(string firstName, string lastName, string email, DateTime dateOfBirth, Client client)
+        {
+            return new User
+            {
+                Client = client,
+                DateOfBirth = dateOfBirth,
+                EmailAddress = email,
+                FirstName = firstName,
+                LastName = lastName
+            };
         }
         
         // oddzielenie logiki walidacji do osobnej metody, poprawka czytelności (Single Responsibility Principle)
