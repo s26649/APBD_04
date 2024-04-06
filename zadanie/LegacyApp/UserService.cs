@@ -50,25 +50,23 @@ namespace LegacyApp
             return true;
         }
         
-        // oddzielenie logiki walidacji do osobnej metody, poprawka czytelności
-        private bool ValidateUserData(string firstName, string lastName, string email)
+        // oddzielenie logiki walidacji do osobnej metody, poprawka czytelności (Single Responsibility Principle)
+        private bool ValidateUserData(string firstName, string lastName, string email, DateTime dateOfBirth)
         {
-            return !string.IsNullOrEmpty(firstName) && !string.IsNullOrEmpty(lastName) && (email.Contains("@") || email.Contains("."));
+            return !string.IsNullOrEmpty(firstName) 
+                   && !string.IsNullOrEmpty(lastName) 
+                   && email.Contains("@") 
+                   && CalculateAge(dateOfBirth) >= 21;
         }
         
-        // oddzielenie obliczania wieku do osobnej metody, poprawka czytelności
+        // oddzielenie obliczania wieku do osobnej metody, poprawka czytelności (Single Responsibility Principle)
         private int CalculateAge(DateTime dateOfBirth)
         {
             var now = DateTime.Now;
             int age = now.Year - dateOfBirth.Year;
-            if (now.Month < dateOfBirth.Month || (now.Month == dateOfBirth.Month && now.Day < dateOfBirth.Day)) age--;
+            if (now.Month < dateOfBirth.Month || (now.Month == dateOfBirth.Month && now.Day < dateOfBirth.Day)) 
+                age--;
             return age;
-        }
-        
-        // oddzielenie walidacji wieku do osobnej metody, poprawka czytelności
-        private bool ValidateAge(int age)
-        {
-            return age >= 21;
         }
     }
 }
