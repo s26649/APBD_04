@@ -6,18 +6,11 @@ namespace LegacyApp
     {
         public bool AddUser(string firstName, string lastName, string email, DateTime dateOfBirth, int clientId)
         {
+            if (!ValidateUserData(firstName, lastName, email, dateOfBirth)) return false;
             var clientRepository = new ClientRepository();
             var client = clientRepository.GetById(clientId);
-
-            var user = new User
-            {
-                Client = client,
-                DateOfBirth = dateOfBirth,
-                EmailAddress = email,
-                FirstName = firstName,
-                LastName = lastName
-            };
-
+            var user = CreateUser(firstName, lastName, email, dateOfBirth, client);
+            
             if (client.Type == "VeryImportantClient")
             {
                 user.HasCreditLimit = false;
@@ -48,6 +41,22 @@ namespace LegacyApp
 
             UserDataAccess.AddUser(user);
             return true;
+        }
+        
+        // oddzielenie utworzenia uzytkownika do osobnej metody
+        private User CreateUser(string firstName, string lastName, string email, DateTime dateOfBirth, Client client)
+        {
+            var user = new User
+            {
+                Client = client,
+                DateOfBirth = dateOfBirth,
+                EmailAddress = email,
+                FirstName = firstName,
+                LastName = lastName,
+                HasCreditLimit = true
+            };
+
+            return user;
         }
         
         // oddzielenie logiki walidacji do osobnej metody, poprawka czytelności (Single Responsibility Principle)
