@@ -4,52 +4,38 @@ namespace LegacyApp
 {
     public class UserService
     {
+        public ClientRepository ClientRepository { get; set; }
+        public UserCreditService UserCreditService { get; set; }
+        
+        private const int MinCreditLimit = 500;
+
+        public UserService()
+        {
+            ClientRepository = new ClientRepository();
+            UserCreditService = new UserCreditService();
+        }
+
         public bool AddUser(string firstName, string lastName, string email, DateTime dateOfBirth, int clientId)
         {
-            if (!ValidateUserData(firstName, lastName, email, dateOfBirth)) return false;
+            var tempUser = new User
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                EmailAddress = email,
+                DateOfBirth = dateOfBirth
+            };
             
-            var clientRepository = new ClientRepository();
-            var client = clientRepository.GetById(clientId);
-            var user = CreateUser(firstName, lastName, email, dateOfBirth, client);
+            if (!tempUser.ValidateUserData()) return false;
+            
+            var client = ClientRepository.GetById(clientId);
+            tempUser.Client = client;
 
-            if (!SetCreditLimitAndCheck(user, client)) return false;
+            if (!SetCreditLimitAndCheck(tempUser, client)) return false;
 
-            UserDataAccess.AddUser(user);
+            UserDataAccess.AddUser(tempUser);
             return true;
         }
-        
-        // oddzielenie tworzenia usera do osobnej metody, poprawka czytelności (Single Responsibility Principle)
-        private User CreateUser(string firstName, string lastName, string email, DateTime dateOfBirth, Client client)
-        {
-            return new User
-            {
-                Client = client,
-                DateOfBirth = dateOfBirth,
-                EmailAddress = email,
-                FirstName = firstName,
-                LastName = lastName
-            };
-        }
-        
-        // oddzielenie logiki walidacji do osobnej metody, poprawka czytelności (Single Responsibility Principle)
-        private bool ValidateUserData(string firstName, string lastName, string email, DateTime dateOfBirth)
-        {
-            return !string.IsNullOrEmpty(firstName) 
-                   && !string.IsNullOrEmpty(lastName) 
-                   && email.Contains("@") 
-                   && CalculateAge(dateOfBirth) >= 21;
-        }
-        
-        // oddzielenie obliczania wieku do osobnej metody, poprawka czytelności (Single Responsibility Principle)
-        private int CalculateAge(DateTime dateOfBirth)
-        {
-            var now = DateTime.Now;
-            int age = now.Year - dateOfBirth.Year;
-            if (now.Month < dateOfBirth.Month || (now.Month == dateOfBirth.Month && now.Day < dateOfBirth.Day)) 
-                age--;
-            return age;
-        }
-        
+
         // oddzielenie logiki ustawiania limitu kredytowego i sprawdzania do osobnej metody, poprawka czytelności (Single Responsibility Principle)
         private bool SetCreditLimitAndCheck(User user, Client client)
         {
@@ -73,7 +59,7 @@ namespace LegacyApp
                 }
             }
 
-            return !(user.HasCreditLimit && user.CreditLimit < 500);
+            return !(user.HasCreditLimit && user.CreditLimit < MinCreditLimit);
         }
     }
 }
